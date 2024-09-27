@@ -3,4 +3,4 @@
 ## Интернет-магазин электроники
 
 ### UseCase диаграмма
-![image](https://github.com/user-attachments/assets/0e120d8e-52c6-4bcf-bf1b-5e1aa23905ac)
+![image](https://github.com/user-attachments/assets/4c9067cf-d20e-41d9-bcfd-3288e297c1d8)
