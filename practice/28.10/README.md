@@ -2,7 +2,7 @@
 # ЭФМО-02-24 Муравьев Владислав Романович
 
 ## Интернет-магазин электроники
-Код: [link](https://github.com/Murken-0/IndustrialProgramming/blob/main/practice/28.10/main.go)
+Код: [main.go](https://github.com/Murken-0/IndustrialProgramming/blob/main/practice/28.10/main.go)
 
 # GetAll
 ![image](https://github.com/user-attachments/assets/7641cbf8-4f51-4756-bf60-724dc1ef44a9)
