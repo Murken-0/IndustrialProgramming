@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 func task1(number string, sourceBase int, targetBase int) {
@@ -201,6 +202,122 @@ func task8(a1, a2, b1, b2, c1, c2 int) {
 	fmt.Println("Нету")
 }
 
+func task9(sentence string) string {
+	fmt.Println("\nЗадача 9. Выбор самого длинного слова в предложении")
+	fmt.Printf("Предложение: %s\n", sentence)
+
+	words := strings.FieldsFunc(sentence, func(r rune) bool {
+		return !unicode.IsLetter(r)
+	})
+
+	longestWord := ""
+	for _, word := range words {
+		if len(word) > len(longestWord) {
+			longestWord = word
+		}
+	}
+
+	fmt.Printf("Самое длинное слово: %s\n", longestWord)
+	return longestWord
+}
+
+func task10(year int) {
+	fmt.Println("\nЗадача 10. Проверка високосного года")
+	fmt.Printf("Год: %d\n", year)
+	var isLeapYear bool
+	if year%4 != 0 {
+		isLeapYear = false
+	} else if year%100 == 0 && year%400 != 0 {
+		isLeapYear = false
+	} else {
+		isLeapYear = true
+	}
+	fmt.Printf("Високосный год: %t\n", isLeapYear)
+}
+
+func task11(n int) {
+	fmt.Println("\nЗадача 11. Числа Фибоначчи до определенного числа")
+	fmt.Printf("Число: %d\n", n)
+
+	a, b := 0, 1
+	for a <= n {
+		fmt.Print(a, " ")
+		a, b = b, a+b
+	}
+	fmt.Println()
+}
+
+func task12(start, end int) {
+	fmt.Println("\nЗадача 12. Определение простых чисел в диапазоне")
+	fmt.Printf("Начало диапазона: %d\n", start)
+	fmt.Printf("Конец диапазона: %d\n", end)
+
+	for i := start; i <= end; i++ {
+		if isPrime(i) {
+			fmt.Print(i, " ")
+		}
+	}
+	fmt.Println()
+}
+
+func isPrime(num int) bool {
+	if num <= 1 {
+		return false
+	}
+	for i := 2; i <= int(math.Sqrt(float64(num))); i++ {
+		if num%i == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func task13(start, end int) {
+	fmt.Println("\nЗадача 13. Числа Армстронга в заданном диапазоне")
+	fmt.Printf("Начало диапазона: %d\n", start)
+	fmt.Printf("Конец диапазона: %d\n", end)
+
+	for i := start; i <= end; i++ {
+		if isArmstrong(i) {
+			fmt.Print(i, " ")
+		}
+	}
+	fmt.Println()
+}
+
+func isArmstrong(num int) bool {
+	numStr := strconv.Itoa(num)
+	n := len([]rune(numStr))
+	sum := 0
+	for i := 0; i < n; i++ {
+		sum += int(numStr[i] - '0')
+	}
+	return math.Pow(float64(sum), float64(n)) == float64(num)
+}
+
+func task14(text string) {
+	fmt.Println("\nЗадача 14. Реверс строки")
+	fmt.Printf("Строка: %s\n", text)
+
+	reversed := ""
+	for i := len(text) - 1; i >= 0; i-- {
+		reversed += string(text[i])
+	}
+
+	fmt.Printf("Перевернутая строка: %s\n", reversed)
+}
+
+func task15(a, b int) {
+	fmt.Println("\nЗадача 15. Нахождение наибольшего общего делителя (НОД)")
+	fmt.Printf("Число 1: %d\n", a)
+	fmt.Printf("Число 2: %d\n", b)
+
+	for b != 0 {
+		a, b = b, a%b
+	}
+	fmt.Printf("НОД: %d\n", a)
+}
+
 func main() {
 	task1("1011", 2, 10)
 	task2(1, -5, 6)
@@ -210,5 +327,11 @@ func main() {
 	task6("5 + 10")
 	task7("А роза упала на лапу Азора")
 	task8(1, 5, 3, 7, 2, 6)
-
+	task9("Это, предложение с, разными словами!")
+	task10(2024)
+	task11(10)
+	task12(2, 20)
+	task13(1, 1000)
+	task14("Hello, world!")
+	task15(24, 36)
 }
