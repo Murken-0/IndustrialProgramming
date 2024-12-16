@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -12,21 +13,20 @@ import (
 )
 
 type Product struct {
-	ID             int64   `gorm:"primaryKey;column:id" json:"id"`
-	Code           int64   `gorm:"column:code" json:"code"`
+	ID             int     `gorm:"primaryKey;column:id" json:"id"`
+	Code           string  `gorm:"column:code" json:"code"`
 	Title          string  `gorm:"column:title" json:"title"`
 	Description    string  `gorm:"column:description" json:"description"`
 	Price          float64 `gorm:"column:price" json:"price"`
 	Preview        string  `gorm:"column:preview" json:"preview"`
-	ManufacturerId int64   `gorm:"column:manufacturer_id" json:"manufacturer_id"`
-	CategoryId     int64   `gorm:"column:category_id" json:"category_id"`
+	ManufacturerId int     `gorm:"column:manufacturer_id" json:"manufacturer_id"`
+	CategoryId     int     `gorm:"column:category_id" json:"category_id"`
 }
 
 type CartProducts struct {
-	ProductID int64   `gorm:"primaryKey;column:product_id" json:"product_id"`
-	UserID    int64   `gorm:"primaryKey;column:user_id" json:"user_id"`
-	Quantity  int     `gorm:"column:quantity" json:"quantity"`
-	UnitPrice float64 `gorm:"column:unit_price" json:"unit_price"`
+	ProductID int `gorm:"primaryKey;column:product_id" json:"product_id"`
+	UserID    int `gorm:"primaryKey;column:user_id" json:"user_id"`
+	Quantity  int `gorm:"column:quantity" json:"quantity"`
 }
 
 var jwtKey = []byte("my_secret_key")
@@ -38,12 +38,12 @@ type Credentials struct {
 
 type Claims struct {
 	Username string `json:"username"`
-	UserID   int64  `json:"userId"`
+	UserID   int    `json:"userId"`
 	jwt.StandardClaims
 }
 
 type User struct {
-	ID          int64  `gorm:"primaryKey;column:id" json:"id"`
+	ID          int    `gorm:"primaryKey;column:id" json:"id"`
 	Login       string `gorm:"column:login;" json:"login"`
 	Password    string `gorm:"column:password;" json:"password"`
 	Email       string `gorm:"column:email;" json:"email"`
@@ -59,12 +59,12 @@ func main() {
 	initDB()
 	router.POST("/login", login)
 	router.POST("/refresh", refreshToken)
+	router.GET("/products", getProducts)
+	router.GET("/products/:id", getProductByID)
 
 	protected := router.Group("/")
 	protected.Use(authMiddleware())
 	{
-		protected.GET("/products", getProducts)
-		protected.GET("/products/:id", getProductByID)
 		protected.POST("/products", createProduct)
 		protected.PUT("/products/:id", updateProduct)
 		protected.DELETE("/products/:id", deleteProduct)
@@ -77,7 +77,7 @@ func main() {
 }
 
 func initDB() {
-	dsn := "host=localhost user=postgres password=1234 dbname=industrial port=5432 sslmode=disable search_path=industrial"
+	dsn := "host=localhost user=postgres password=1234 dbname=industrial port=5432 sslmode=disable search_path=public"
 	var err error
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -92,7 +92,7 @@ func initDB() {
 	log.Println("Database initialized")
 }
 
-func generateToken(username string, userID int64) (string, error) {
+func generateToken(username string, userID int) (string, error) {
 	expirationTime := time.Now().Add(15 * time.Minute)
 	claims := &Claims{
 		Username: username,
@@ -114,7 +114,7 @@ func login(c *gin.Context) {
 
 	var user User
 	if err := db.Where("login = ? AND password = ?", creds.Login, creds.Password).First(&user).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "database error"})
@@ -246,9 +246,9 @@ func deleteProduct(c *gin.Context) {
 }
 
 func getCart(c *gin.Context) {
-	userID := c.GetInt64("userId")
+	userID := c.GetInt("userId")
 	var cartItems []CartProducts
-	if err := db.Where("userid = ?", userID).Find(&cartItems).Error; err != nil {
+	if err := db.Where("user_id = ?", userID).Find(&cartItems).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to fetch cart"})
 		return
 	}
@@ -265,7 +265,7 @@ func addToCart(c *gin.Context) {
 	}
 
 	var existingItem CartProducts
-	result := db.Where("productid = ? AND userid = ?", newItem.ProductID, newItem.UserID).First(&existingItem)
+	result := db.Where("product_id = ? AND user_id = ?", newItem.ProductID, newItem.UserID).First(&existingItem)
 
 	if result.RowsAffected > 0 {
 		existingItem.Quantity += newItem.Quantity
@@ -287,10 +287,10 @@ func addToCart(c *gin.Context) {
 
 func deleteFromCart(c *gin.Context) {
 	productID := c.Param("productId")
-	userID := c.GetInt64("userId")
+	userID := c.GetInt("userId")
 
 	var item CartProducts
-	if err := db.Where("productid = ? AND userid = ?", productID, userID).First(&item).Error; err != nil {
+	if err := db.Where("product_id = ? AND user_id = ?", productID, userID).First(&item).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"message": "product not found in cart"})
 		} else {
